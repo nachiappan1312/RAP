@@ -34,8 +34,8 @@ SEED = 42
 N_ENGINES = 6          # 3 clouds x 2 engines each
 N_QUERIES = 100        # queries per trial
 N_TRIALS = 30          # independent repetitions
-OPS_MIN, OPS_MAX = 5, 20          # operators per query
-SEL_MIN, SEL_MAX = 0.1, 0.9       # operator selectivity range
+OPS_MIN, OPS_MAX = 2, 5            # operators per query
+SEL_MIN, SEL_MAX = 0.5, 0.95      # operator selectivity range
 VOL_LOG_MIN = 0        # log10(GB) min
 VOL_LOG_MAX = 3        # log10(GB) max  => 1 GB to 1 TB
 BETA = 1.0             # link vulnerability coefficient
@@ -93,9 +93,10 @@ def compute_data_transfer(ops, push_site, orchestrator_cloud='orch'):
     Estimate cross-cloud data transfer volume (GB) given a push-down site.
     If push_site is None, all data is pulled to orchestrator (centralized ETL).
     """
+    base_vol = ops[0]['vol_in']
     if push_site is None:
-        # Centralized: all raw input data transferred to orchestrator
-        return sum(op['vol_in'] for op in ops)
+        # Centralized: raw data volume transferred to orchestrator
+        return base_vol
     else:
         # Push-down: only output (post-selection) transferred
         last_vol = ops[-1]['vol_in'] * ops[-1]['selectivity']
@@ -153,7 +154,10 @@ def run_trial(method, lam, rng):
             # Check if primary link is degraded; if so, still use it (no rerouting)
             transfer = compute_data_transfer(ops, push_site=push_site)
             # Under attack, static PDO may retry via orchestrator at extra cost
-            if lam > 0.0 and rho_eff[push_site, push_site] <= RHO_MIN:
+            avg_inter_rho = np.mean([rho_eff[push_site, j]
+                                     for j in range(N_ENGINES)
+                                     if CLOUD_OF[j] != CLOUD_OF[push_site]])
+            if lam > 0.0 and avg_inter_rho < RHO_MIN:
                 # Fallback: partial centralized -- adds 60% overhead
                 transfer *= 1.6
             lat = simulate_latency(transfer, rho_eff)
@@ -230,7 +234,7 @@ def plot_latency(results):
     ax.set_ylabel('Normalized Query Latency')
     ax.set_xlim(-0.02, 0.42)
     ax.set_xticks(LAMBDAS)
-    ax.set_ylim(0.5, 1.55)
+    ax.set_ylim(0.0, 1.8)
     ax.legend(fontsize=9, loc='upper center', bbox_to_anchor=(0.5, 1.18),
               ncol=3, frameon=True, fancybox=True)
     ax.grid(True, linestyle='--', alpha=0.5)
@@ -256,7 +260,7 @@ def plot_egress(results):
     ax.set_ylabel('Normalized Data Egress')
     ax.set_xlim(-0.02, 0.42)
     ax.set_xticks(LAMBDAS)
-    ax.set_ylim(0.3, 1.35)
+    ax.set_ylim(0.0, 1.3)
     ax.legend(fontsize=9, loc='upper center', bbox_to_anchor=(0.5, 1.18),
               ncol=3, frameon=True, fancybox=True)
     ax.grid(True, linestyle='--', alpha=0.5)

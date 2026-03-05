@@ -213,7 +213,7 @@ def run_all_experiments():
 # === Plotting (export PDF at 300 DPI) ===
 def plot_latency(results):
     """Fig. 1: Normalized query latency vs. DoS attack intensity."""
-    fig, ax = plt.subplots(figsize=(3.5, 2.8))
+    fig, ax = plt.subplots(figsize=(5.5, 3.5))
     # Normalize by centralized ETL at lambda=0
     baseline_lat = results['centralized']['latency'][0][0]
     styles = {
@@ -231,15 +231,16 @@ def plot_latency(results):
     ax.set_xlim(-0.02, 0.42)
     ax.set_xticks(LAMBDAS)
     ax.set_ylim(0.5, 1.55)
-    ax.legend(fontsize=9, loc='upper left')
+    ax.legend(fontsize=9, loc='upper center', bbox_to_anchor=(0.5, 1.18),
+              ncol=3, frameon=True, fancybox=True)
     ax.grid(True, linestyle='--', alpha=0.5)
     fig.tight_layout()
-    fig.savefig('fig_latency.pdf', dpi=300)
-    print("Saved fig_latency.pdf")
+    fig.savefig('fig_latency.png', dpi=300)
+    print("Saved fig_latency.png")
     plt.close(fig)
 def plot_egress(results):
     """Fig. 2: Normalized cross-cloud data egress vs. DoS attack intensity."""
-    fig, ax = plt.subplots(figsize=(3.5, 2.8))
+    fig, ax = plt.subplots(figsize=(5.5, 3.5))
     baseline_egr = results['centralized']['egress'][0][0]
     styles = {
         'centralized': ('black', 's-', 'Centralized ETL'),
@@ -256,11 +257,12 @@ def plot_egress(results):
     ax.set_xlim(-0.02, 0.42)
     ax.set_xticks(LAMBDAS)
     ax.set_ylim(0.3, 1.35)
-    ax.legend(fontsize=9, loc='upper left')
+    ax.legend(fontsize=9, loc='upper center', bbox_to_anchor=(0.5, 1.18),
+              ncol=3, frameon=True, fancybox=True)
     ax.grid(True, linestyle='--', alpha=0.5)
     fig.tight_layout()
-    fig.savefig('fig_egress.pdf', dpi=300)
-    print("Saved fig_egress.pdf")
+    fig.savefig('fig_egress.png', dpi=300)
+    print("Saved fig_egress.png")
     plt.close(fig)
 def print_availability_table(results):
     """Print pipeline availability table matching Table I in the paper."""
@@ -288,6 +290,6 @@ if __name__ == '__main__':
     print_availability_table(results)
     plot_latency(results)
     plot_egress(results)
-    print("\nDone. Generated: fig_latency.pdf, fig_egress.pdf")
+    print("\nDone. Generated: fig_latency.png, fig_egress.png")
     print("\nTo compile the paper:")
     print("  pdflatex main.tex && bibtex main && pdflatex main.tex && pdflatex main.tex")
